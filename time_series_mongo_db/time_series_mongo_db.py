@@ -1,0 +1,50 @@
+import json
+import datetime as dt
+
+import pymongo
+
+from doc_database_meta_classes.time_series_doc_db import ITimeSeriesDocumentDatabase
+
+
+class TimeSeriesMongoDb(ITimeSeriesDocumentDatabase):
+
+    def __init__(self, client_uri, client_name):
+        mongo_client = pymongo.MongoClient(client_uri)
+        self.__client = mongo_client[client_name]
+
+    def get_time_series_collection_list(self):
+        return json.dumps(
+            [x for x in self.__client.list_collection_names() if not 'system' in x]
+        )
+
+    def insert_pandas_time_series_data(
+        self, collection_name, time_series_data, 
+        time_field='timestamp', timestamp_key='Date'
+    ):
+        time_series_data = json.loads(time_series_data)
+        self.__client[collection_name].drop()
+        self.__client.create_collection(collection_name, timeseries={'timeField': time_field})
+        for row in time_series_data['data']:
+            row[time_field] = dt.datetime.strptime(row[timestamp_key], '%Y-%m-%d')
+            del row[timestamp_key]
+            self.__client[collection_name].insert_one(row)
+
+
+    def get_time_series_data(self, collection_name, start_dt=None, end_dt=None):
+        if not start_dt or not end_dt:
+            return json.dumps(
+                list(self.__client[collection_name].find({}, {'_id': 0})), default=str
+            )
+        else:
+            return json.dumps(
+                list(
+                    self.__client[collection_name].find(
+                        {'timestamp': {'$gte': start_dt, '$lte': end_dt}},
+                        {'_id': 0}
+                    )
+                ), default=str
+            )
+
+
+if __name__ == '__main__':
+    pass
