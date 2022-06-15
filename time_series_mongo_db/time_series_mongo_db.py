@@ -25,10 +25,9 @@ class TimeSeriesMongoDb(ITimeSeriesDocumentDatabase):
         self.__client[collection_name].drop()
         self.__client.create_collection(collection_name, timeseries={'timeField': time_field})
         for row in time_series_data['data']:
-            row[time_field] = dt.datetime.strptime(row[timestamp_key], '%Y-%m-%d')
+            row[time_field] = dt.datetime.fromisoformat(row[timestamp_key][:-1])
             del row[timestamp_key]
             self.__client[collection_name].insert_one(row)
-
 
     def get_time_series_data(self, collection_name, start_dt=None, end_dt=None):
         if not start_dt or not end_dt:
