@@ -3,8 +3,8 @@ import json
 from pymongo.collection import Collection
 from bson import json_util
 
-from doc_database_meta_classes.tet_portfolio_doc_db import ITetPortfolioDocumentDatabase
-from tet_mongo_db.systems_mongo_db import TetSystemsMongoDb
+from tet_doc_db.doc_database_meta_classes.tet_portfolio_doc_db import ITetPortfolioDocumentDatabase
+from tet_doc_db.tet_mongo_db.systems_mongo_db import TetSystemsMongoDb
 
 
 class TetPortfolioMongoDb(ITetPortfolioDocumentDatabase, TetSystemsMongoDb):

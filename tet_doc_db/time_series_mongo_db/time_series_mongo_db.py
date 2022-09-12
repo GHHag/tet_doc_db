@@ -3,7 +3,7 @@ import datetime as dt
 
 from pymongo.mongo_client import MongoClient
 
-from doc_database_meta_classes.time_series_doc_db import ITimeSeriesDocumentDatabase
+from tet_doc_db.doc_database_meta_classes.time_series_doc_db import ITimeSeriesDocumentDatabase
 
 
 class TimeSeriesMongoDb(ITimeSeriesDocumentDatabase):

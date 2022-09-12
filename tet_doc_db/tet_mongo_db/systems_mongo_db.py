@@ -6,7 +6,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.collection import Collection
 from bson import json_util
 
-from doc_database_meta_classes.tet_systems_doc_db import ITetSystemsDocumentDatabase
+from tet_doc_db.doc_database_meta_classes.tet_systems_doc_db import ITetSystemsDocumentDatabase
 
 from TETrading.position.position import Position
 from TETrading.position.position_manager import PositionManager

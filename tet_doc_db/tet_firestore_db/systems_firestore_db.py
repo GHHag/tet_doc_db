@@ -4,7 +4,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 
-from doc_database_meta_classes.tet_signals_doc_db import ITetSignalsDocumentDatabase
+from tet_doc_db.doc_database_meta_classes.tet_signals_doc_db import ITetSignalsDocumentDatabase
 
 
 class TetSystemsFirestoreDb(ITetSignalsDocumentDatabase):
