@@ -20,7 +20,7 @@ class InstrumentsMongoDb:
         self.__client = mongo_client[client_name]
         self.__market_lists: Collection = self.__client[self.MARKET_LISTS_COLLECTION]
         self.__instruments: Collection = self.__client[self.INSTRUMENTS_COLLECTION]
-
+    
     def get_market_list_id(self, market_list_name):
         query = self.__market_lists.find_one(
             {self.MARKET_LIST_FIELD: market_list_name},
