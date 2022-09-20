@@ -14,6 +14,7 @@ class InstrumentsMongoDb:
     MARKET_LIST_FIELD = 'market_list'
     MARKET_LIST_IDS_FIELD = 'market_list_ids'
     SYMBOL_FIELD = 'symbol'
+    SECTOR_FIELD = 'industry'
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)
@@ -79,6 +80,37 @@ class InstrumentsMongoDb:
         return json.dumps(
             [i['symbol'] for i in market_list_instruments['market_list_instruments']]
         )
+
+    def get_sectors(self):
+        query = self.__instruments.distinct(self.SECTOR_FIELD)
+        return json.dumps(query)
+
+    def get_sector_instruments_for_market_lists(self, market_list_ids, sector):
+        query = self.__instruments.aggregate(
+            [
+                {
+                    '$match': { self.SECTOR_FIELD: sector}
+                },
+                {
+                    '$match': {
+                        '$nor': [
+                            {
+                                self.MARKET_LIST_IDS_FIELD: {
+                                    '$nin': market_list_ids
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    '$project': {
+                        '_id': 0,
+                        'symbol': 1
+                    }
+                }
+            ]
+        )
+        return json.dumps(list(query), default=json_util.default)
 
     """ OMXS_COLLECTION_STRING = 'omxs_instruments'
     OMXS30_COLLECTION_STRING = 'omxs30_instruments'
