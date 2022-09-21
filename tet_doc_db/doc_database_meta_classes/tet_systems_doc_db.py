@@ -20,6 +20,10 @@ class ITetSystemsDocumentDatabase(ITetSignalsDocumentDatabase):
         ...
 
     @abstractmethod
+    def get_market_state_data_for_symbol(self):
+        ...
+
+    @abstractmethod
     def insert_position_list(self):
         ...
 

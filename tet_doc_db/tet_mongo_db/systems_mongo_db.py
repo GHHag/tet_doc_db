@@ -20,9 +20,12 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     SYSTEM_NAME_FIELD = 'system_name'
     SYMBOL_FIELD = 'symbol'
     METRICS_FIELD = 'metrics'
+    MARKET_STATE_FIELD = 'market_state'
     PORTFOLIO_CREATION_DATA_FIELD = 'portfolio_creation_data'
     NUMBER_OF_PERIODS_FIELD = 'num_of_periods'
     POSITION_LIST_FIELD = 'position_list'
+    ML_MODEL_FIELD = 'model'
+    INSTRUMENT_FIELD = 'instrument'
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)
@@ -31,6 +34,7 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         self.__market_states: Collection = self.__client.market_states
         self.__positions: Collection = self.__client.positions
         self.__single_symbol_positions: Collection = self.__client.single_symbol_positions
+        self.__ml_models: Collection = self.__client.ml_models
 
     @property
     def client(self):
@@ -108,9 +112,16 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     def get_market_state_data(self, system_name, market_state):
         system_id = self._get_system_id(system_name)
         query = self.__market_states.find(
-            {self.SYSTEM_ID_FIELD: system_id, 'market_state': market_state}
+            {self.SYSTEM_ID_FIELD: system_id, self.MARKET_STATE_FIELD: market_state}
         )
         return json.dumps(list(query), default=json_util.default)
+
+    def get_market_state_data_for_symbol(self, system_name, symbol):
+        system_id = self._get_system_id(system_name)
+        query = self.__market_states.find_one(
+            {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol},
+        )
+        return json.dumps(query, default=json_util.default)
 
     def insert_position_list(
         self, system_name, position_list: List[Position], 
@@ -281,32 +292,32 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             }
         )
 
-    ###############################
-
     def insert_ml_model(self, system_name, instrument, model):
         system_id = self._get_system_id(system_name)
         if not system_id:
             self._insert_system(system_name)
             system_id = self._get_system_id(system_name)
-        self.__client.ml_models.update_one(
+        self.__ml_models.update_one(
             {
-                self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name, 
-                'instrument': instrument
+                self.SYSTEM_ID_FIELD: system_id, 
+                self.SYSTEM_NAME_FIELD: system_name, 
+                self.INSTRUMENT_FIELD: instrument
             },
-            {'$set': {'model': model}}, upsert=True
+            {'$set': {self.ML_MODEL_FIELD: model}}, upsert=True
         )
         return True
 
     def get_ml_model(self, system_name, instrument):
         system_id = self._get_system_id(system_name)
-        query = self.__client.ml_models.find_one(
+        query = self.__ml_models.find_one(
             {
-                self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name, 
-                'instrument': instrument
+                self.SYSTEM_ID_FIELD: system_id, 
+                self.SYSTEM_NAME_FIELD: system_name, 
+                self.INSTRUMENT_FIELD: instrument
             }, 
-            {self.ID_FIELD: 0, 'model': 1}
+            {self.ID_FIELD: 0, self.ML_MODEL_FIELD: 1}
         )
-        return pickle.loads(query['model'])
+        return pickle.loads(query[self.ML_MODEL_FIELD])
 
 
 if __name__ == '__main__':
