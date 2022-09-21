@@ -26,6 +26,7 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     POSITION_LIST_FIELD = 'position_list'
     ML_MODEL_FIELD = 'model'
     INSTRUMENT_FIELD = 'instrument'
+    SIGNAL_DT_FIELD = 'signal_dt'
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)
@@ -120,8 +121,12 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         system_id = self._get_system_id(system_name)
         query = self.__market_states.find_one(
             {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol},
+            {self.ID_FIELD: 0, self.MARKET_STATE_FIELD: 1, self.SIGNAL_DT_FIELD: 1}
         )
-        return json.dumps(query, default=json_util.default)
+        if not query:
+            return json.dumps({self.MARKET_STATE_FIELD: None, self.SIGNAL_DT_FIELD: None})
+        else:
+            return json.dumps(query, default=json_util.default)
 
     def insert_position_list(
         self, system_name, position_list: List[Position], 
