@@ -104,10 +104,16 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         for data_p in data['data']:
             assert isinstance(data_p, dict)
             data_p.update({self.SYSTEM_ID_FIELD: system_id})
-            self.__market_states.update_one(
-                {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: data_p['symbol']},
-                {'$set': data_p}, upsert=True
-            )
+            if data_p[self.MARKET_STATE_FIELD] == 'entry':
+                self.__market_states.remove(
+                    {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: data_p['symbol']}
+                )
+                self.__market_states.insert_one(data_p)
+            else:
+                self.__market_states.update_one(
+                    {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: data_p['symbol']},
+                    {'$set': data_p}, upsert=True
+                )
         return True
 
     def get_market_state_data(self, system_name, market_state):
@@ -206,7 +212,10 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             )
             return result.modified_count > 0
 
-    def get_single_symbol_position_list(self, system_name, symbol, format='serialized'):
+    def get_single_symbol_position_list(
+        self, system_name, symbol, 
+        format='serialized', return_num_of_periods=False
+    ):
         system_id = self._get_system_id(system_name)
         if format == 'serialized':
             query = self.__single_symbol_positions.find_one(
@@ -216,8 +225,11 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
                 },
                 {self.ID_FIELD: 0, self.POSITION_LIST_FIELD: 1, self.NUMBER_OF_PERIODS_FIELD: 1}
             )
-            return list(map(pickle.loads, query[self.POSITION_LIST_FIELD])), \
-                query[self.NUMBER_OF_PERIODS_FIELD]
+            if return_num_of_periods:
+                return list(map(pickle.loads, query[self.POSITION_LIST_FIELD])), \
+                    query[self.NUMBER_OF_PERIODS_FIELD]
+            else:
+                return list(map(pickle.loads, query[self.POSITION_LIST_FIELD]))
         elif format == 'json':
             query = self.__single_symbol_positions.find_one(
                 {
@@ -265,7 +277,9 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         )
 
     def get_single_symbol_historic_data(self, system_name, symbol):
-        position_list, num_of_periods = self.get_single_symbol_position_list(system_name, symbol)
+        position_list, num_of_periods = self.get_single_symbol_position_list(
+            system_name, symbol, return_num_of_periods=True
+        )
 
         start_dt = position_list[0].entry_dt
         end_dt = position_list[-1].exit_signal_dt if position_list[-1].exit_signal_dt is not None \
