@@ -126,8 +126,8 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     def get_market_state_data_for_symbol(self, system_name, symbol):
         system_id = self._get_system_id(system_name)
         query = self.__market_states.find_one(
-            {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol},
-            {self.ID_FIELD: 0, self.MARKET_STATE_FIELD: 1, self.SIGNAL_DT_FIELD: 1}
+            {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol}#,
+            #{self.ID_FIELD: 0, self.MARKET_STATE_FIELD: 1, self.SIGNAL_DT_FIELD: 1}
         )
         if not query:
             return json.dumps({self.MARKET_STATE_FIELD: None, self.SIGNAL_DT_FIELD: None})
