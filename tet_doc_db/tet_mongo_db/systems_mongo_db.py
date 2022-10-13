@@ -8,6 +8,8 @@ from bson import json_util
 
 from tet_doc_db.doc_database_meta_classes.tet_systems_doc_db import ITetSystemsDocumentDatabase
 
+from TETrading.utils.metadata.market_state_enum import MarketState
+from TETrading.utils.metadata.trading_system_attributes import TradingSystemAttributes
 from TETrading.position.position import Position
 from TETrading.position.position_manager import PositionManager
 
@@ -18,15 +20,15 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     SYSTEM_ID_FIELD = 'system_id'
     NAME_FIELD = 'name'
     SYSTEM_NAME_FIELD = 'system_name'
-    SYMBOL_FIELD = 'symbol'
+    SYMBOL_FIELD = TradingSystemAttributes.SYMBOL
     METRICS_FIELD = 'metrics'
-    MARKET_STATE_FIELD = 'market_state'
+    MARKET_STATE_FIELD = TradingSystemAttributes.MARKET_STATE
     PORTFOLIO_CREATION_DATA_FIELD = 'portfolio_creation_data'
     NUMBER_OF_PERIODS_FIELD = 'num_of_periods'
     POSITION_LIST_FIELD = 'position_list'
     ML_MODEL_FIELD = 'model'
     INSTRUMENT_FIELD = 'instrument'
-    SIGNAL_DT_FIELD = 'signal_dt'
+    SIGNAL_DT_FIELD = TradingSystemAttributes.SIGNAL_DT
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)
@@ -104,14 +106,20 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         for data_p in data['data']:
             assert isinstance(data_p, dict)
             data_p.update({self.SYSTEM_ID_FIELD: system_id})
-            if data_p[self.MARKET_STATE_FIELD] == 'entry':
+            if data_p[self.MARKET_STATE_FIELD] == MarketState.ENTRY.value:
                 self.__market_states.remove(
-                    {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: data_p['symbol']}
+                    {
+                        self.SYSTEM_ID_FIELD: system_id, 
+                        self.SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
+                    }
                 )
                 self.__market_states.insert_one(data_p)
             else:
                 self.__market_states.update_one(
-                    {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: data_p['symbol']},
+                    {
+                        self.SYSTEM_ID_FIELD: system_id, 
+                        self.SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
+                    },
                     {'$set': data_p}, upsert=True
                 )
         return True
@@ -126,8 +134,7 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     def get_market_state_data_for_symbol(self, system_name, symbol):
         system_id = self._get_system_id(system_name)
         query = self.__market_states.find_one(
-            {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol}#,
-            #{self.ID_FIELD: 0, self.MARKET_STATE_FIELD: 1, self.SIGNAL_DT_FIELD: 1}
+            {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol}
         )
         if not query:
             return json.dumps({self.MARKET_STATE_FIELD: None, self.SIGNAL_DT_FIELD: None})

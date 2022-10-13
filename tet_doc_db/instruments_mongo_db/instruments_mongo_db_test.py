@@ -4,6 +4,8 @@ from pymongo.mongo_client import MongoClient
 from pymongo.collection import Collection
 from bson import json_util, objectid
 
+from TETrading.utils.metadata.trading_system_attributes import TradingSystemAttributes
+
 class InstrumentsMongoDbTest:
 
     MARKET_LISTS_COLLECTION = 'market_lists'
@@ -12,7 +14,7 @@ class InstrumentsMongoDbTest:
     ID_FIELD = '_id'
     MARKET_LIST_FIELD = 'market_list'
     MARKET_LIST_IDS_FIELD = 'market_list_ids'
-    SYMBOL_FIELD = 'symbol'
+    SYMBOL_FIELD = TradingSystemAttributes.SYMBOL 
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)

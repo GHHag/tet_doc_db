@@ -4,6 +4,8 @@ from pymongo.mongo_client import MongoClient
 from pymongo.collection import Collection
 from bson import json_util, objectid
 
+from TETrading.utils.metadata.trading_system_attributes import TradingSystemAttributes
+
 
 class InstrumentsMongoDb:
 
@@ -13,7 +15,7 @@ class InstrumentsMongoDb:
     ID_FIELD = '_id'
     MARKET_LIST_FIELD = 'market_list'
     MARKET_LIST_IDS_FIELD = 'market_list_ids'
-    SYMBOL_FIELD = 'symbol'
+    SYMBOL_FIELD = TradingSystemAttributes.SYMBOL 
     SECTOR_FIELD = 'industry'
 
     def __init__(self, client_uri, client_name):
@@ -78,7 +80,7 @@ class InstrumentsMongoDb:
             self.get_market_list_instruments(market_list_id)
         )
         return json.dumps(
-            [i['symbol'] for i in market_list_instruments['market_list_instruments']]
+            [i[self.SYMBOL_FIELD] for i in market_list_instruments['market_list_instruments']]
         )
 
     def get_sectors(self):
@@ -104,8 +106,8 @@ class InstrumentsMongoDb:
                 },
                 {
                     '$project': {
-                        '_id': 0,
-                        'symbol': 1
+                        self.ID_FIELD: 0,
+                        self.SYMBOL_FIELD: 1
                     }
                 }
             ]
