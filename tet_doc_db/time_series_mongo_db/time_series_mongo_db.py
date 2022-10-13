@@ -8,7 +8,7 @@ from tet_doc_db.doc_database_meta_classes.time_series_doc_db import ITimeSeriesD
 
 class TimeSeriesMongoDb(ITimeSeriesDocumentDatabase):
 
-    ID_FIELD = '_id'
+    __ID_FIELD = '_id'
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)
@@ -34,14 +34,14 @@ class TimeSeriesMongoDb(ITimeSeriesDocumentDatabase):
     def get_time_series_data(self, collection_name, start_dt=None, end_dt=None):
         if not start_dt or not end_dt:
             return json.dumps(
-                list(self.__client[collection_name].find({}, {self.ID_FIELD: 0})), default=str
+                list(self.__client[collection_name].find({}, {self.__ID_FIELD: 0})), default=str
             )
         else:
             return json.dumps(
                 list(
                     self.__client[collection_name].find(
                         {'timestamp': {'$gte': start_dt, '$lte': end_dt}},
-                        {self.ID_FIELD: 0}
+                        {self.__ID_FIELD: 0}
                     )
                 ), default=str
             )

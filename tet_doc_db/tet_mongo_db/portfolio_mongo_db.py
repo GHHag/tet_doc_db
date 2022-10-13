@@ -9,7 +9,7 @@ from tet_doc_db.tet_mongo_db.systems_mongo_db import TetSystemsMongoDb
 
 class TetPortfolioMongoDb(ITetPortfolioDocumentDatabase, TetSystemsMongoDb):
 
-    TARGET_PORTFOLIO_POSITIONS_FIELD = 'target_portfolio_positions'
+    __TARGET_PORTFOLIO_POSITIONS_FIELD = 'target_portfolio_positions'
 
     def __init__(self, client_uri, client_name):
         super().__init__(client_uri, client_name)
@@ -19,24 +19,24 @@ class TetPortfolioMongoDb(ITetPortfolioDocumentDatabase, TetSystemsMongoDb):
         system_id = self._get_system_id(system_name) 
         self.__portfolios.insert_one(
             {
-                self.SYSTEM_ID_FIELD: system_id,
-                self.SYSTEM_NAME_FIELD: system_name, 
-                self.PORTFOLIO_CREATION_DATA_FIELD: portfolio_creation_data
+                self.__SYSTEM_ID_FIELD: system_id,
+                self.__SYSTEM_NAME_FIELD: system_name, 
+                self.__PORTFOLIO_CREATION_DATA_FIELD: portfolio_creation_data
             }
         )
 
     def _get_portfolio_id(self, system_name):
         query = self.__portfolios.find_one(
-            {self.SYSTEM_NAME_FIELD: system_name},
-            {self.ID_FIELD: 1}
+            {self.__SYSTEM_NAME_FIELD: system_name},
+            {self.__ID_FIELD: 1}
         )
-        return query[self.ID_FIELD] if query else None
+        return query[self.__ID_FIELD] if query else None
 
     def get_portfolio(self, system_name):
         portfolio_id = self._get_portfolio_id(system_name)
         system_id = self._get_system_id(system_name)
         query = self.__portfolios.find_one(
-            {self.ID_FIELD: portfolio_id, self.SYSTEM_ID_FIELD: system_id}
+            {self.__ID_FIELD: portfolio_id, self.__SYSTEM_ID_FIELD: system_id}
         )
         if not portfolio_id or not query:
             return None
@@ -47,10 +47,10 @@ class TetPortfolioMongoDb(ITetPortfolioDocumentDatabase, TetSystemsMongoDb):
         portfolio_id = self._get_portfolio_id(system_name)
         system_id = self._get_system_id(system_name)
         result = self.__portfolios.update_one(
-            {self.ID_FIELD: portfolio_id, self.SYSTEM_ID_FIELD: system_id},
+            {self.__ID_FIELD: portfolio_id, self.__SYSTEM_ID_FIELD: system_id},
             {
                 '$set': {
-                    self.TARGET_PORTFOLIO_POSITIONS_FIELD: target_portfolio_positions
+                    self.__TARGET_PORTFOLIO_POSITIONS_FIELD: target_portfolio_positions
                 } 
             }, upsert=True
         )
@@ -60,10 +60,10 @@ class TetPortfolioMongoDb(ITetPortfolioDocumentDatabase, TetSystemsMongoDb):
         portfolio_id = self._get_portfolio_id(system_name)
         system_id = self._get_system_id(system_name)
         query = self.__portfolios.find_one(
-            {self.ID_FIELD: portfolio_id, self.SYSTEM_ID_FIELD: system_id},
-            {self.PORTFOLIO_CREATION_DATA_FIELD: 1}
+            {self.__ID_FIELD: portfolio_id, self.__SYSTEM_ID_FIELD: system_id},
+            {self.__PORTFOLIO_CREATION_DATA_FIELD: 1}
         )
-        return query[self.PORTFOLIO_CREATION_DATA_FIELD]['max_positions']
+        return query[self.__PORTFOLIO_CREATION_DATA_FIELD]['max_positions']
 
     def get_target_portfolio_positions(self, system_name):
         portfolio_id = self._get_portfolio_id(system_name)
@@ -72,14 +72,14 @@ class TetPortfolioMongoDb(ITetPortfolioDocumentDatabase, TetSystemsMongoDb):
             [
                 {
                     '$match': {
-                        self.ID_FIELD: portfolio_id, self.SYSTEM_ID_FIELD: system_id
+                        self.__ID_FIELD: portfolio_id, self.__SYSTEM_ID_FIELD: system_id
                     }
                 },
                 {
                     '$lookup': {
                         'from': 'market_states',
-                        'localField': self.TARGET_PORTFOLIO_POSITIONS_FIELD,
-                        'foreignField': self.ID_FIELD,
+                        'localField': self.__TARGET_PORTFOLIO_POSITIONS_FIELD,
+                        'foreignField': self.__ID_FIELD,
                         'as': 'positions_market_state'
                     }
                 },

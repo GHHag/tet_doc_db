@@ -16,19 +16,19 @@ from TETrading.position.position_manager import PositionManager
 
 class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
 
-    ID_FIELD = '_id'
-    SYSTEM_ID_FIELD = 'system_id'
-    NAME_FIELD = 'name'
-    SYSTEM_NAME_FIELD = 'system_name'
-    SYMBOL_FIELD = TradingSystemAttributes.SYMBOL
-    METRICS_FIELD = 'metrics'
-    MARKET_STATE_FIELD = TradingSystemAttributes.MARKET_STATE
-    PORTFOLIO_CREATION_DATA_FIELD = 'portfolio_creation_data'
-    NUMBER_OF_PERIODS_FIELD = 'num_of_periods'
-    POSITION_LIST_FIELD = 'position_list'
-    ML_MODEL_FIELD = 'model'
-    INSTRUMENT_FIELD = 'instrument'
-    SIGNAL_DT_FIELD = TradingSystemAttributes.SIGNAL_DT
+    __ID_FIELD = '_id'
+    __SYSTEM_ID_FIELD = 'system_id'
+    __NAME_FIELD = 'name'
+    __SYSTEM_NAME_FIELD = 'system_name'
+    __SYMBOL_FIELD = TradingSystemAttributes.SYMBOL
+    __METRICS_FIELD = 'metrics'
+    __MARKET_STATE_FIELD = TradingSystemAttributes.MARKET_STATE
+    __PORTFOLIO_CREATION_DATA_FIELD = 'portfolio_creation_data'
+    __NUMBER_OF_PERIODS_FIELD = 'num_of_periods'
+    __POSITION_LIST_FIELD = 'position_list'
+    __ML_MODEL_FIELD = 'model'
+    __INSTRUMENT_FIELD = 'instrument'
+    __SIGNAL_DT_FIELD = TradingSystemAttributes.SIGNAL_DT
 
     def __init__(self, client_uri, client_name):
         mongo_client = MongoClient(client_uri)
@@ -44,19 +44,19 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         return self.__client
 
     def _insert_system(self, system_name):
-        self.__systems.insert_one({self.NAME_FIELD: system_name})
+        self.__systems.insert_one({self.__NAME_FIELD: system_name})
 
     def _get_system_id(self, system_name):
         query = self.__systems.find_one(
-            {self.NAME_FIELD: system_name},
-            {self.ID_FIELD: 1}
+            {self.__NAME_FIELD: system_name},
+            {self.__ID_FIELD: 1}
         )
-        return query[self.ID_FIELD] if query else None
+        return query[self.__ID_FIELD] if query else None
 
     def get_systems(self):
         query = self.__systems.find(
             {}, 
-            {self.ID_FIELD: 1, self.NAME_FIELD: 1}
+            {self.__ID_FIELD: 1, self.__NAME_FIELD: 1}
         )
         return json.dumps(list(query), default=json_util.default)
 
@@ -66,14 +66,14 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             return False
         else:
             result = self.__systems.update_one(
-                {self.ID_FIELD: system_id, self.NAME_FIELD: system_name},
-                {'$set': {self.METRICS_FIELD: {k: v for k, v in metrics.items()}}}
+                {self.__ID_FIELD: system_id, self.__NAME_FIELD: system_name},
+                {'$set': {self.__METRICS_FIELD: {k: v for k, v in metrics.items()}}}
             )
             for data_dict in list(args):
                 if isinstance(data_dict, dict):
                     for k, v in data_dict.items():
                         self.__systems.update_one(
-                            {self.ID_FIELD: system_id, self.NAME_FIELD: system_name},
+                            {self.__ID_FIELD: system_id, self.__NAME_FIELD: system_name},
                             {'$set': {k: v}}
                         )
             return result.modified_count > 0
@@ -81,10 +81,10 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     def get_system_metrics(self, system_name):
         system_id = self._get_system_id(system_name)
         query = self.__systems.find_one(
-            {self.ID_FIELD: system_id, self.NAME_FIELD: system_name},
+            {self.__ID_FIELD: system_id, self.__NAME_FIELD: system_name},
             {
-                self.ID_FIELD: 1, self.NAME_FIELD: 1, self.METRICS_FIELD: 1, 
-                self.NUMBER_OF_PERIODS_FIELD: 1
+                self.__ID_FIELD: 1, self.__NAME_FIELD: 1, self.__METRICS_FIELD: 1, 
+                self.__NUMBER_OF_PERIODS_FIELD: 1
             }
         )
         return json.dumps(query, default=json_util.default)
@@ -92,10 +92,10 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     def get_system_portfolio_creation_data(self, system_name):
         system_id = self._get_system_id(system_name)
         query = self.__systems.find_one(
-            {self.ID_FIELD: system_id, self.NAME_FIELD: system_name},
-            {self.ID_FIELD: 0, self.PORTFOLIO_CREATION_DATA_FIELD: 1}
+            {self.__ID_FIELD: system_id, self.__NAME_FIELD: system_name},
+            {self.__ID_FIELD: 0, self.__PORTFOLIO_CREATION_DATA_FIELD: 1}
         )
-        return json.dumps(query[self.PORTFOLIO_CREATION_DATA_FIELD])
+        return json.dumps(query[self.__PORTFOLIO_CREATION_DATA_FIELD])
 
     def insert_market_state_data(self, system_name, data):
         data = json.loads(data)
@@ -105,20 +105,20 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             system_id = self._get_system_id(system_name)
         for data_p in data['data']:
             assert isinstance(data_p, dict)
-            data_p.update({self.SYSTEM_ID_FIELD: system_id})
-            if data_p[self.MARKET_STATE_FIELD] == MarketState.ENTRY.value:
+            data_p.update({self.__SYSTEM_ID_FIELD: system_id})
+            if data_p[self.__MARKET_STATE_FIELD] == MarketState.ENTRY.value:
                 self.__market_states.remove(
                     {
-                        self.SYSTEM_ID_FIELD: system_id, 
-                        self.SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
+                        self.__SYSTEM_ID_FIELD: system_id, 
+                        self.__SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
                     }
                 )
                 self.__market_states.insert_one(data_p)
             else:
                 self.__market_states.update_one(
                     {
-                        self.SYSTEM_ID_FIELD: system_id, 
-                        self.SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
+                        self.__SYSTEM_ID_FIELD: system_id, 
+                        self.__SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
                     },
                     {'$set': data_p}, upsert=True
                 )
@@ -127,17 +127,17 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
     def get_market_state_data(self, system_name, market_state):
         system_id = self._get_system_id(system_name)
         query = self.__market_states.find(
-            {self.SYSTEM_ID_FIELD: system_id, self.MARKET_STATE_FIELD: market_state}
+            {self.__SYSTEM_ID_FIELD: system_id, self.__MARKET_STATE_FIELD: market_state}
         )
         return json.dumps(list(query), default=json_util.default)
 
     def get_market_state_data_for_symbol(self, system_name, symbol):
         system_id = self._get_system_id(system_name)
         query = self.__market_states.find_one(
-            {self.SYSTEM_ID_FIELD: system_id, self.SYMBOL_FIELD: symbol}
+            {self.__SYSTEM_ID_FIELD: system_id, self.__SYMBOL_FIELD: symbol}
         )
         if not query:
-            return json.dumps({self.MARKET_STATE_FIELD: None, self.SIGNAL_DT_FIELD: None})
+            return json.dumps({self.__MARKET_STATE_FIELD: None, self.__SIGNAL_DT_FIELD: None})
         else:
             return json.dumps(query, default=json_util.default)
 
@@ -148,20 +148,20 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         system_id = self._get_system_id(system_name)
         if format == 'serialized':
             result = self.__positions.update_one(
-                {self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name},
+                {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
                 {
                     '$set': {
-                        self.POSITION_LIST_FIELD: [pickle.dumps(pos) for pos in position_list]
+                        self.__POSITION_LIST_FIELD: [pickle.dumps(pos) for pos in position_list]
                     }
                 }, upsert=True
             )
             return result.modified_count > 0
         elif format == 'json':
             result = self.__positions.update_one(
-                {self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name},
+                {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
                 {
                     '$set': {
-                        f'{self.POSITION_LIST_FIELD}_json': [pos.to_dict for pos in position_list]
+                        f'{self.__POSITION_LIST_FIELD}_json': [pos.to_dict for pos in position_list]
                     }
                 }, upsert=True
             )
@@ -171,14 +171,14 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         system_id = self._get_system_id(system_name)
         if format == 'serialized':
             query = self.__positions.find_one(
-                {self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name},
-                {self.ID_FIELD: 0, self.SYSTEM_ID_FIELD: 1, self.POSITION_LIST_FIELD: 1}
+                {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
+                {self.__ID_FIELD: 0, self.__SYSTEM_ID_FIELD: 1, self.__POSITION_LIST_FIELD: 1}
             )
-            return list(map(pickle.loads, query[self.POSITION_LIST_FIELD]))
+            return list(map(pickle.loads, query[self.__POSITION_LIST_FIELD]))
         elif format == 'json':
             query = self.__positions.find_one(
-                {self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name},
-                {self.ID_FIELD: 0, self.SYSTEM_ID_FIELD: 1, f'{self.POSITION_LIST_FIELD}_json': 1}
+                {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
+                {self.__ID_FIELD: 0, self.__SYSTEM_ID_FIELD: 1, f'{self.__POSITION_LIST_FIELD}_json': 1}
             )
             return json.dumps(query, default=json_util.default)
 
@@ -193,13 +193,13 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         if format == 'serialized':
             result = self.__single_symbol_positions.update_one(
                 {
-                    self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name, 
-                    self.SYMBOL_FIELD: symbol
+                    self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name, 
+                    self.__SYMBOL_FIELD: symbol
                 },
                 {
                     '$set': {
-                        self.POSITION_LIST_FIELD: [pickle.dumps(pos) for pos in position_list],
-                        self.NUMBER_OF_PERIODS_FIELD: num_of_periods
+                        self.__POSITION_LIST_FIELD: [pickle.dumps(pos) for pos in position_list],
+                        self.__NUMBER_OF_PERIODS_FIELD: num_of_periods
                     }
                 }, upsert=True
             )
@@ -207,13 +207,13 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         elif format == 'json':
             result = self.__single_symbol_positions.update_one(
                 {
-                    self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name, 
-                    self.SYMBOL_FIELD: symbol
+                    self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name, 
+                    self.__SYMBOL_FIELD: symbol
                 },
                 {
                     '$set': {
-                        f'{self.POSITION_LIST_FIELD}_json': [pos.to_dict for pos in position_list],
-                        self.NUMBER_OF_PERIODS_FIELD: num_of_periods
+                        f'{self.__POSITION_LIST_FIELD}_json': [pos.to_dict for pos in position_list],
+                        self.__NUMBER_OF_PERIODS_FIELD: num_of_periods
                     }
                 }, upsert=True
             )
@@ -227,23 +227,23 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         if format == 'serialized':
             query = self.__single_symbol_positions.find_one(
                 {
-                    self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name, 
-                    self.SYMBOL_FIELD: symbol
+                    self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name, 
+                    self.__SYMBOL_FIELD: symbol
                 },
-                {self.ID_FIELD: 0, self.POSITION_LIST_FIELD: 1, self.NUMBER_OF_PERIODS_FIELD: 1}
+                {self.__ID_FIELD: 0, self.__POSITION_LIST_FIELD: 1, self.__NUMBER_OF_PERIODS_FIELD: 1}
             )
             if return_num_of_periods:
-                return list(map(pickle.loads, query[self.POSITION_LIST_FIELD])), \
-                    query[self.NUMBER_OF_PERIODS_FIELD]
+                return list(map(pickle.loads, query[self.__POSITION_LIST_FIELD])), \
+                    query[self.__NUMBER_OF_PERIODS_FIELD]
             else:
-                return list(map(pickle.loads, query[self.POSITION_LIST_FIELD]))
+                return list(map(pickle.loads, query[self.__POSITION_LIST_FIELD]))
         elif format == 'json':
             query = self.__single_symbol_positions.find_one(
                 {
-                    self.SYSTEM_ID_FIELD: system_id, self.SYSTEM_NAME_FIELD: system_name, 
-                    self.SYMBOL_FIELD: symbol
+                    self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name, 
+                    self.__SYMBOL_FIELD: symbol
                 },
-                {f'{self.POSITION_LIST_FIELD}_json': 1, self.NUMBER_OF_PERIODS_FIELD: 1}
+                {f'{self.__POSITION_LIST_FIELD}_json': 1, self.__NUMBER_OF_PERIODS_FIELD: 1}
             )
             return json.dumps(query, default=json_util.default)
 
@@ -256,7 +256,7 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             else position_list[-2].exit_signal_dt
 
         position_manager = PositionManager(
-            system_name, system_metrics[self.NUMBER_OF_PERIODS_FIELD], 10000, 1.0
+            system_name, system_metrics[self.__NUMBER_OF_PERIODS_FIELD], 10000, 1.0
         )
 
         def generate_pos_sequence(position_list, **kwargs):
@@ -325,11 +325,11 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             system_id = self._get_system_id(system_name)
         self.__ml_models.update_one(
             {
-                self.SYSTEM_ID_FIELD: system_id, 
-                self.SYSTEM_NAME_FIELD: system_name, 
-                self.INSTRUMENT_FIELD: instrument
+                self.__SYSTEM_ID_FIELD: system_id, 
+                self.__SYSTEM_NAME_FIELD: system_name, 
+                self.__INSTRUMENT_FIELD: instrument
             },
-            {'$set': {self.ML_MODEL_FIELD: model}}, upsert=True
+            {'$set': {self.__ML_MODEL_FIELD: model}}, upsert=True
         )
         return True
 
@@ -337,13 +337,13 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         system_id = self._get_system_id(system_name)
         query = self.__ml_models.find_one(
             {
-                self.SYSTEM_ID_FIELD: system_id, 
-                self.SYSTEM_NAME_FIELD: system_name, 
-                self.INSTRUMENT_FIELD: instrument
+                self.__SYSTEM_ID_FIELD: system_id, 
+                self.__SYSTEM_NAME_FIELD: system_name, 
+                self.__INSTRUMENT_FIELD: instrument
             }, 
-            {self.ID_FIELD: 0, self.ML_MODEL_FIELD: 1}
+            {self.__ID_FIELD: 0, self.__ML_MODEL_FIELD: 1}
         )
-        return pickle.loads(query[self.ML_MODEL_FIELD])
+        return pickle.loads(query[self.__ML_MODEL_FIELD])
 
 
 if __name__ == '__main__':
