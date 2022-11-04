@@ -106,7 +106,8 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
         for data_p in data['data']:
             assert isinstance(data_p, dict)
             data_p.update({self.__SYSTEM_ID_FIELD: system_id})
-            if data_p[self.__MARKET_STATE_FIELD] == MarketState.ENTRY.value:
+            if self.__MARKET_STATE_FIELD in data_p and \
+                data_p[self.__MARKET_STATE_FIELD] == MarketState.ENTRY.value:
                 self.__market_states.remove(
                     {
                         self.__SYSTEM_ID_FIELD: system_id, 
