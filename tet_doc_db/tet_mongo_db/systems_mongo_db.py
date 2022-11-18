@@ -8,8 +8,8 @@ from bson import json_util
 
 from tet_doc_db.doc_database_meta_classes.tet_systems_doc_db import ITetSystemsDocumentDatabase
 
-from TETrading.utils.metadata.market_state_enum import MarketState
-from TETrading.utils.metadata.trading_system_attributes import TradingSystemAttributes
+from TETrading.data.metadata.market_state_enum import MarketState
+from TETrading.data.metadata.trading_system_attributes import TradingSystemAttributes
 from TETrading.position.position import Position
 from TETrading.position.position_manager import PositionManager
 
@@ -143,7 +143,7 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             return json.dumps(query, default=json_util.default)
 
     def insert_position_list(
-        self, system_name, position_list: List[Position], 
+        self, system_name, position_list: List[Position], num_of_periods,
         format='serialized'
     ):
         system_id = self._get_system_id(system_name)
@@ -152,7 +152,8 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
                 {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
                 {
                     '$set': {
-                        self.__POSITION_LIST_FIELD: [pickle.dumps(pos) for pos in position_list]
+                        self.__POSITION_LIST_FIELD: [pickle.dumps(pos) for pos in position_list],
+                        self.__NUMBER_OF_PERIODS_FIELD: num_of_periods
                     }
                 }, upsert=True
             )
@@ -162,24 +163,35 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
                 {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
                 {
                     '$set': {
-                        f'{self.__POSITION_LIST_FIELD}_json': [pos.to_dict for pos in position_list]
+                        f'{self.__POSITION_LIST_FIELD}_json': [pos.to_dict for pos in position_list],
+                        self.__NUMBER_OF_PERIODS_FIELD: num_of_periods
                     }
                 }, upsert=True
             )
             return result.modified_count > 0
 
-    def get_position_list(self, system_name, format='serialized'):
+    def get_position_list(self, system_name, format='serialized', return_num_of_periods=False):
         system_id = self._get_system_id(system_name)
         if format == 'serialized':
             query = self.__positions.find_one(
                 {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
-                {self.__ID_FIELD: 0, self.__SYSTEM_ID_FIELD: 1, self.__POSITION_LIST_FIELD: 1}
+                {
+                    self.__ID_FIELD: 0, self.__SYSTEM_ID_FIELD: 1, 
+                    self.__POSITION_LIST_FIELD: 1, self.__NUMBER_OF_PERIODS_FIELD: 1
+                }
             )
-            return list(map(pickle.loads, query[self.__POSITION_LIST_FIELD]))
+            if return_num_of_periods:
+                return list(map(pickle.loads, query[self.__POSITION_LIST_FIELD])), \
+                    query[self.__NUMBER_OF_PERIODS_FIELD]
+            else:
+                return list(map(pickle.loads, query[self.__POSITION_LIST_FIELD]))
         elif format == 'json':
             query = self.__positions.find_one(
                 {self.__SYSTEM_ID_FIELD: system_id, self.__SYSTEM_NAME_FIELD: system_name},
-                {self.__ID_FIELD: 0, self.__SYSTEM_ID_FIELD: 1, f'{self.__POSITION_LIST_FIELD}_json': 1}
+                {
+                    self.__ID_FIELD: 0, self.__SYSTEM_ID_FIELD: 1, 
+                    f'{self.__POSITION_LIST_FIELD}_json': 1, self.__NUMBER_OF_PERIODS_FIELD: 1
+                }
             )
             return json.dumps(query, default=json_util.default)
 

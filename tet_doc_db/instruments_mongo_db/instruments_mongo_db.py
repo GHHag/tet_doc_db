@@ -4,7 +4,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.collection import Collection
 from bson import json_util, objectid
 
-from TETrading.utils.metadata.trading_system_attributes import TradingSystemAttributes
+from TETrading.data.metadata.trading_system_attributes import TradingSystemAttributes
 
 
 class InstrumentsMongoDb:
