@@ -108,7 +108,7 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
             data_p.update({self.__SYSTEM_ID_FIELD: system_id})
             if self.__MARKET_STATE_FIELD in data_p and \
                 data_p[self.__MARKET_STATE_FIELD] == MarketState.ENTRY.value:
-                self.__market_states.remove(
+                self.__market_states.delete_one(
                     {
                         self.__SYSTEM_ID_FIELD: system_id, 
                         self.__SYMBOL_FIELD: data_p[TradingSystemAttributes.SYMBOL]
