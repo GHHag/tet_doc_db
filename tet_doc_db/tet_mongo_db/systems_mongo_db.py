@@ -321,9 +321,9 @@ class TetSystemsMongoDb(ITetSystemsDocumentDatabase):
                 'start_dt': str(start_dt),
                 'end_dt': str(end_dt),
                 'market_to_market_returns': list(
-                        map(float, position_manager.metrics.market_to_market_returns_list)
-                    ),
-                'equity_list': list(map(float, position_manager.metrics.equity_list)),
+                    position_manager.metrics.market_to_market_returns_list.astype(float)
+                ),
+                'equity_list': list(position_manager.metrics.equity_list.astype(float)),
                 'returns_list': list(position_manager.metrics.returns_list),
                 'mae_list': list(position_manager.metrics.mae_list),
                 'mfe_list': list(position_manager.metrics.mfe_list),
